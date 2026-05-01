@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+    <script src="https://unpkg.com/three@0.164.1/build/three.min.js"></script>
     <style>
       :root {
         --bg: #0a0a0a;
@@ -33,6 +34,10 @@
         color: var(--text);
         overflow-x: hidden;
         cursor: none;
+      }
+      main {
+        perspective: 1400px;
+        transform-style: preserve-3d;
       }
       body::before {
         content: "";
@@ -67,6 +72,12 @@
       nav a:hover { color: var(--accent); }
       .menu-btn { display: none; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--text); cursor: pointer; }
       .section { padding: clamp(4rem, 8vw, 7rem) 0; position: relative; z-index: 2; }
+      .scroll-3d {
+        transform-origin: 50% 0%;
+        will-change: transform, opacity, filter;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+      }
       .hero { min-height: 100vh; display: grid; align-items: center; padding-top: var(--header-h); position: relative; overflow: hidden; }
       .hero-bg {
         position: absolute; inset: -20% -5% auto -5%; height: 120%;
@@ -76,12 +87,29 @@
           linear-gradient(180deg, #090909 20%, #0a0a0a 100%);
         transform: translateY(0); transition: transform 80ms linear;
       }
+      .hero-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .hero-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 60% 45%, rgba(255, 63, 181, 0.14), transparent 38%),
+          radial-gradient(circle at 35% 60%, rgba(153, 78, 255, 0.14), transparent 42%),
+          radial-gradient(circle at 70% 30%, rgba(255, 216, 77, 0.12), transparent 36%);
+        mix-blend-mode: screen;
+      }
       .hero-bg::after {
         content: ""; position: absolute; inset: 0;
         background: repeating-linear-gradient(130deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 14px);
         mix-blend-mode: overlay; opacity: 0.5;
       }
-      .hero-content { position: relative; max-width: 850px; }
+      .hero-content { position: relative; z-index: 2; max-width: 850px; }
       .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.74rem; margin-bottom: 1.2rem; }
       h1, h2, h3 { font-family: "Cormorant Garamond", serif; line-height: 0.95; margin: 0 0 1rem; }
       h1 { font-size: clamp(3rem, 12vw, 8rem); }
@@ -160,6 +188,7 @@
       @media (max-width: 900px) {
         body { cursor: auto; }
         .cursor-dot { display: none; }
+        .scroll-3d { transform: none !important; filter: none !important; opacity: 1 !important; }
         .menu-btn { display: inline-grid; place-items: center; }
         nav {
           position: fixed; top: var(--header-h); left: 0; right: 0; padding: 1.1rem 1.5rem 1.5rem;
@@ -197,6 +226,8 @@
     </header>
     <main id="top">
       <section class="hero section">
+        <div class="hero-canvas" id="heroCanvas" aria-hidden="true"></div>
+        <div class="hero-overlay" aria-hidden="true"></div>
         <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
         <div class="container hero-content">
           <p class="eyebrow reveal">Soul Studio | AI Creator + Video Editor</p>
@@ -213,7 +244,7 @@
           </div>
         </div>
       </section>
-      <section id="about" class="section">
+      <section id="about" class="section scroll-3d">
         <div class="container about-grid">
           <div class="about-statement reveal">
             AI precision.
@@ -230,7 +261,7 @@
           </div>
         </div>
       </section>
-      <section id="services" class="section">
+      <section id="services" class="section scroll-3d">
         <div class="container">
           <h2 class="section-title reveal">Services</h2>
           <p class="section-sub reveal">
@@ -246,7 +277,7 @@
           </div>
         </div>
       </section>
-      <section id="tools" class="section">
+      <section id="tools" class="section scroll-3d">
         <div class="container">
           <h2 class="section-title reveal">Tools I Use</h2>
           <div class="tools-wrap reveal" aria-label="Tool ticker">
@@ -256,7 +287,7 @@
           </div>
         </div>
       </section>
-      <section id="why-me" class="section">
+      <section id="why-me" class="section scroll-3d">
         <div class="container">
           <h2 class="section-title reveal">Why Choose Me</h2>
           <div class="why-grid">
@@ -267,12 +298,12 @@
           </div>
         </div>
       </section>
-      <section class="section">
+      <section class="section scroll-3d">
         <div class="container portfolio-cta reveal">
           <a href="https://soulstudio.ai" target="_blank" rel="noreferrer">See All Work <span>→</span></a>
         </div>
       </section>
-      <section id="contact" class="section contact">
+      <section id="contact" class="section contact scroll-3d">
         <div class="container reveal">
           <h2 class="section-title">Let's Create Something</h2>
           <a class="contact-link magnetic" href="https://instagram.com/soulstudio.ai" target="_blank" rel="noreferrer">@soulstudio.ai</a>
@@ -285,8 +316,10 @@
       const siteNav = document.getElementById("siteNav");
       const navLinks = siteNav.querySelectorAll("a");
       const heroBg = document.getElementById("heroBg");
+      const heroCanvas = document.getElementById("heroCanvas");
       const cursorDot = document.getElementById("cursorDot");
       const magneticTargets = document.querySelectorAll(".magnetic");
+      const scroll3DSections = document.querySelectorAll(".scroll-3d");
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       menuBtn.addEventListener("click", () => {
         const open = siteNav.classList.toggle("open");
@@ -314,8 +347,200 @@
           heroBg.style.transform = "translateY(" + y * 0.18 + "px)";
         };
         document.addEventListener("scroll", parallax, { passive: true });
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        let ticking = false;
+        const update3DScroll = () => {
+          const vh = window.innerHeight;
+          scroll3DSections.forEach((section) => {
+            const rect = section.getBoundingClientRect();
+            const progress = clamp((vh - rect.top) / (vh + rect.height * 0.8), 0, 1);
+            const rotateX = 13 * (1 - progress);
+            const rotateY = -7 * (1 - progress);
+            const translateY = 72 * (1 - progress);
+            const scale = 0.96 + progress * 0.04;
+            const opacity = 0.34 + progress * 0.66;
+            section.style.transform =
+              "translate3d(0," +
+              translateY +
+              "px,0) rotateX(" +
+              rotateX +
+              "deg) rotateY(" +
+              rotateY +
+              "deg) scale(" +
+              scale +
+              ")";
+            section.style.opacity = String(opacity);
+            section.style.filter = "saturate(" + (0.8 + progress * 0.2) + ")";
+          });
+          ticking = false;
+        };
+        const requestTick = () => {
+          if (!ticking) {
+            window.requestAnimationFrame(update3DScroll);
+            ticking = true;
+          }
+        };
+        requestTick();
+        window.addEventListener("scroll", requestTick, { passive: true });
+        window.addEventListener("resize", requestTick);
       } else {
         document.querySelectorAll(".reveal").forEach((el) => el.classList.add("visible"));
+        scroll3DSections.forEach((section) => {
+          section.style.transform = "none";
+          section.style.opacity = "1";
+          section.style.filter = "none";
+        });
+      }
+
+      if (window.THREE && heroCanvas) {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(46, heroCanvas.clientWidth / heroCanvas.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 7.6);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+        renderer.setSize(heroCanvas.clientWidth, heroCanvas.clientHeight);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        heroCanvas.appendChild(renderer.domElement);
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const particleCount = 260;
+        const positions = new Float32Array(particleCount * 3);
+        const basePositions = [];
+        for (let i = 0; i < particleCount; i++) {
+          const side = i % 2 === 0 ? -1 : 1;
+          const theta = Math.random() * Math.PI * 2;
+          const r = 1.1 + Math.random() * 1.35;
+          const y = (Math.random() - 0.5) * 2.4;
+          const x = side * (0.62 + Math.cos(theta) * r * 0.3) + Math.sin(theta) * 0.25;
+          const z = Math.sin(theta) * r * 0.95 + (Math.random() - 0.5) * 0.3;
+          basePositions.push({ x, y, z, phase: Math.random() * Math.PI * 2 });
+          positions[i * 3] = x;
+          positions[i * 3 + 1] = y;
+          positions[i * 3 + 2] = z;
+        }
+
+        const pointGeometry = new THREE.BufferGeometry();
+        pointGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const pointMaterial = new THREE.PointsMaterial({
+          size: 0.045,
+          color: 0xff50d9,
+          transparent: true,
+          opacity: 0.95,
+          blending: THREE.AdditiveBlending
+        });
+        const points = new THREE.Points(pointGeometry, pointMaterial);
+        group.add(points);
+
+        const maxConnections = 360;
+        const linePositions = new Float32Array(maxConnections * 2 * 3);
+        const lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
+        lineGeometry.setDrawRange(0, 0);
+        const lineMaterial = new THREE.LineBasicMaterial({
+          color: 0xffd84d,
+          transparent: true,
+          opacity: 0.36,
+          blending: THREE.AdditiveBlending
+        });
+        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+        group.add(lines);
+
+        const glowMaterial = new THREE.SpriteMaterial({
+          color: 0x994eff,
+          transparent: true,
+          opacity: 0.3,
+          blending: THREE.AdditiveBlending
+        });
+        const glow = new THREE.Sprite(glowMaterial);
+        glow.scale.set(8.4, 5.2, 1);
+        scene.add(glow);
+
+        const scrollState = { progress: 0 };
+        const onScroll = () => {
+          const hero = document.querySelector(".hero");
+          const rect = hero.getBoundingClientRect();
+          const total = rect.height + window.innerHeight;
+          const seen = window.innerHeight - rect.top;
+          const raw = Math.min(1, Math.max(0, seen / total));
+          scrollState.progress = raw;
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        const updateConnections = () => {
+          let index = 0;
+          let connectionCount = 0;
+          for (let i = 0; i < particleCount && connectionCount < maxConnections; i += 3) {
+            const ax = positions[i * 3];
+            const ay = positions[i * 3 + 1];
+            const az = positions[i * 3 + 2];
+            for (let j = i + 1; j < particleCount && connectionCount < maxConnections; j += 5) {
+              const bx = positions[j * 3];
+              const by = positions[j * 3 + 1];
+              const bz = positions[j * 3 + 2];
+              const dx = ax - bx;
+              const dy = ay - by;
+              const dz = az - bz;
+              const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+              if (dist < 1.05) {
+                linePositions[index++] = ax;
+                linePositions[index++] = ay;
+                linePositions[index++] = az;
+                linePositions[index++] = bx;
+                linePositions[index++] = by;
+                linePositions[index++] = bz;
+                connectionCount++;
+              }
+            }
+          }
+          lineGeometry.setDrawRange(0, connectionCount * 2);
+          lineGeometry.attributes.position.needsUpdate = true;
+        };
+
+        let t = 0;
+        const animate = () => {
+          t += 0.012;
+          const morphStrength = 0.22 + scrollState.progress * 0.95;
+          for (let i = 0; i < particleCount; i++) {
+            const p = basePositions[i];
+            const lobeBias = p.x < 0 ? -1 : 1;
+            positions[i * 3] =
+              p.x +
+              Math.sin(t * 1.2 + p.phase) * 0.1 * morphStrength +
+              lobeBias * Math.sin(t * 0.7 + p.y) * 0.04 * morphStrength;
+            positions[i * 3 + 1] =
+              p.y + Math.cos(t * 1.1 + p.phase) * 0.08 * morphStrength;
+            positions[i * 3 + 2] =
+              p.z + Math.sin(t * 1.4 + p.phase) * 0.14 * morphStrength;
+          }
+          pointGeometry.attributes.position.needsUpdate = true;
+          updateConnections();
+
+          group.rotation.y = t * 0.18 + scrollState.progress * Math.PI * 0.85;
+          group.rotation.x = Math.sin(t * 0.45) * 0.1 + (0.1 + scrollState.progress * 0.42);
+          group.rotation.z = Math.sin(t * 0.32) * 0.05;
+          group.position.y = -0.15 + scrollState.progress * 0.25;
+
+          pointMaterial.color.setHSL(0.84 + Math.sin(t * 0.4) * 0.03, 0.95, 0.66);
+          lineMaterial.opacity = 0.28 + scrollState.progress * 0.22;
+          glow.material.opacity = 0.2 + scrollState.progress * 0.28;
+
+          renderer.render(scene, camera);
+          requestAnimationFrame(animate);
+        };
+        animate();
+
+        const onResize = () => {
+          const w = heroCanvas.clientWidth || window.innerWidth;
+          const h = heroCanvas.clientHeight || window.innerHeight;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        };
+        window.addEventListener("resize", onResize);
       }
       if (window.matchMedia("(min-width: 901px)").matches) {
         let x = window.innerWidth / 2;
