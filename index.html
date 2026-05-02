@@ -140,6 +140,28 @@
         z-index: 0;
         pointer-events: none;
       }
+      .hero-static-fallback {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .hero-static-fallback svg {
+        position: absolute;
+        top: 50%;
+        right: -6%;
+        width: min(92vw, 52rem);
+        height: auto;
+        max-height: 118%;
+        transform: translateY(-50%);
+        opacity: 0.9;
+        filter: drop-shadow(0 0 32px rgba(153, 78, 255, 0.28)) drop-shadow(0 0 48px rgba(255, 62, 180, 0.12));
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hero-static-fallback { display: block; }
+      }
       .hero-overlay {
         position: absolute;
         inset: 0;
@@ -383,6 +405,31 @@
     </header>
     <main id="top">
       <section class="hero section">
+        <div class="hero-static-fallback" aria-hidden="true">
+          <svg viewBox="0 0 520 440" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" focusable="false">
+            <defs>
+              <linearGradient id="nf-stroke" x1="6%" y1="42%" x2="94%" y2="58%">
+                <stop offset="0%" stop-color="#ff3acb" />
+                <stop offset="40%" stop-color="#994eff" />
+                <stop offset="100%" stop-color="#ffe94d" />
+              </linearGradient>
+              <linearGradient id="nf-soft" x1="0%" y1="50%" x2="100%" y2="50%">
+                <stop offset="0%" stop-color="#ff3acb" stop-opacity="0.35" />
+                <stop offset="50%" stop-color="#ffffff" stop-opacity="0.12" />
+                <stop offset="100%" stop-color="#ffe94d" stop-opacity="0.35" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="258" cy="228" rx="168" ry="138" fill="url(#nf-soft)" opacity="0.35" />
+            <g fill="none" stroke="url(#nf-stroke)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" opacity="0.52">
+              <path d="M 132 228 C 118 148 168 88 252 96 C 336 86 406 138 392 228 C 408 312 338 368 256 352 C 174 366 118 308 132 228 Z" />
+              <path d="M 248 96 C 252 152 248 288 256 352 M 186 118 Q 230 170 248 228 M 318 108 Q 274 176 262 236 M 146 248 Q 212 262 268 268 M 356 242 Q 296 278 242 292 M 178 292 Q 238 308 302 298 M 218 142 Q 238 198 228 262 M 296 158 Q 276 214 286 278 M 156 188 Q 206 206 248 212 M 352 188 Q 302 216 268 228 M 196 328 Q 246 312 298 322 M 268 168 Q 258 228 268 292" opacity="0.85" />
+              <path d="M 248 108 L 218 178 L 188 248 L 228 312 L 292 318 L 332 248 L 318 168 L 268 128 Z" opacity="0.45" stroke-width="0.9" />
+            </g>
+            <g fill="url(#nf-stroke)" opacity="0.72">
+              <circle cx="188" cy="168" r="2.4" /><circle cx="238" cy="138" r="2" /><circle cx="312" cy="152" r="2.3" /><circle cx="348" cy="218" r="2.1" /><circle cx="322" cy="292" r="2.5" /><circle cx="252" cy="322" r="2.2" /><circle cx="178" cy="288" r="2" /><circle cx="148" cy="218" r="2.3" /><circle cx="218" cy="228" r="2.6" /><circle cx="282" cy="248" r="2.2" /><circle cx="268" cy="188" r="1.9" /><circle cx="226" cy="278" r="2" /><circle cx="298" cy="338" r="2.1" /><circle cx="356" cy="268" r="1.8" />
+            </g>
+          </svg>
+        </div>
         <div class="hero-canvas" id="heroCanvas" aria-hidden="true"></div>
         <div class="hero-overlay" aria-hidden="true"></div>
         <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
