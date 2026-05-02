@@ -14,7 +14,6 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
       rel="stylesheet"
     />
-    <script src="https://unpkg.com/three@0.164.1/build/three.min.js"></script>
     <style>
       :root {
         --bg: #0a0a0a;
@@ -561,7 +560,23 @@
         });
       }
 
-      if (window.THREE && heroCanvas && !reduceMotion) {
+      function loadThreeJs() {
+        return new Promise((resolve, reject) => {
+          if (window.THREE) {
+            resolve();
+            return;
+          }
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/three@0.164.1/build/three.min.js";
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Three.js failed to load"));
+          document.head.appendChild(s);
+        });
+      }
+
+      function initHeroBrain() {
+        if (!window.THREE || !heroCanvas) return;
         const THREE = window.THREE;
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(
@@ -827,6 +842,29 @@
         };
         window.addEventListener("resize", onResizeBrain);
       }
+
+      if (heroCanvas && !reduceMotion) {
+        const heroSection = document.querySelector(".hero");
+        const startBrain = () => {
+          loadThreeJs()
+            .then(() => initHeroBrain())
+            .catch(() => {});
+        };
+        if (heroSection && "IntersectionObserver" in window) {
+          const brainIo = new IntersectionObserver(
+            (entries) => {
+              if (!entries.some((e) => e.isIntersecting)) return;
+              brainIo.disconnect();
+              startBrain();
+            },
+            { rootMargin: "140px 0px", threshold: 0 }
+          );
+          brainIo.observe(heroSection);
+        } else {
+          startBrain();
+        }
+      }
+
       if (window.matchMedia("(min-width: 901px)").matches) {
         let x = window.innerWidth / 2;
         let y = window.innerHeight / 2;
